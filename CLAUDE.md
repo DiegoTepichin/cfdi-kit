@@ -10,11 +10,9 @@ A Python library, CLI and local interface that parses CFDI invoices (SAT XML) in
 
 Accountants, freelancers and fintech developers in Mexico.
 
-## Scope (v0.1)
+## Scope
 
-To be defined in `docs/PLAN.md` during the planning session.
-
-Anything else is out of scope until v0.1 ships.
+v1.0 scope and out-of-scope list live in `docs/PLAN.md`. Ideas beyond it go to GitHub issues.
 
 ## Code standards
 
@@ -29,8 +27,15 @@ Anything else is out of scope until v0.1 ships.
 
 ## Commands
 
-None yet. Add each command here once it exists and has been run.
+- `uv sync`: install the project and dev dependencies.
+- `uv run ruff check .` / `uv run ruff format --check .` / `uv run mypy .` / `uv run pytest`: the CI checks.
+- `uv run cfdi-kit parse|summary|validate|report PATHS ...`: the CLI (see README).
+- `uv run python examples/generate_demo.py examples/demo`: regenerate the synthetic demo invoices.
+- `uv build`: build the sdist and wheel.
 
 ## Structure
 
-Not defined yet. Decided in `docs/PLAN.md`.
+- `src/cfdi_kit/`: `models`, `parser`, `loader`, `catalogs`, `export`, `summary`, `validate`, `report` (+ `report.css`), `cli`.
+- `tests/`: one test module per source module; synthetic XML in `tests/fixtures/`.
+- `examples/`: demo generator and generated demo invoices.
+- `docs/`: `PLAN.md` and the README screenshot.

@@ -74,8 +74,8 @@ Stamping, issuing or cancelling invoices; downloading from the SAT portal; check
 
 ## Launch checklist
 
-- [ ] CI green on main.
-- [ ] README with a real screenshot of the HTML report.
+- [x] Checks green on main (run locally; Actions paused by budget on private repos).
+- [x] README with a real screenshot of the HTML report.
 - [ ] `uv build` produces a wheel that installs and runs `cfdi-kit --version`.
 - [ ] Tag `v1.0.0` (PyPI publish only with the maintainer's OK).
 - [ ] Repository made public (maintainer's OK).
