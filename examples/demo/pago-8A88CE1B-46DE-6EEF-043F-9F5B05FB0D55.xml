@@ -8,7 +8,7 @@
       <pago20:Totales MontoTotalPagos="31459.99"/>
       <pago20:Pago FechaPago="2026-11-15T17:00:00" FormaDePagoP="03" MonedaP="MXN" TipoCambioP="1" Monto="31459.99">
         <pago20:DoctoRelacionado IdDocumento="25CE93FC-C95E-F1D0-4145-FF00E39F13D7" MonedaDR="MXN" EquivalenciaDR="1" NumParcialidad="1" ImpSaldoAnt="31459.99" ImpPagado="31459.99" ImpSaldoInsoluto="0.00" ObjetoImpDR="02">
-          <pago20:ImpuestosDR><pago20:TrasladosDR><pago20:TrasladoDR BaseDR="27120.68" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.160000" ImporteDR="4339.31"/></pago20:TrasladosDR></pago20:ImpuestosDR>
+          <pago20:ImpuestosDR><pago20:TrasladosDR><pago20:TrasladoDR BaseDR="33000.00" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.160000" ImporteDR="5280.00"/></pago20:TrasladosDR><pago20:RetencionesDR><pago20:RetencionDR BaseDR="33000.00" ImpuestoDR="001" TipoFactorDR="Tasa" TasaOCuotaDR="0.100000" ImporteDR="3300.00"/><pago20:RetencionDR BaseDR="33000.00" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.106667" ImporteDR="3520.01"/></pago20:RetencionesDR></pago20:ImpuestosDR>
         </pago20:DoctoRelacionado>
       </pago20:Pago>
     </pago20:Pagos>

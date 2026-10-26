@@ -39,6 +39,18 @@ class Party:
     zip_code: str
 
 
+@dataclass(frozen=True)
+class Totals:
+    subtotal: Decimal
+    iva: Decimal
+    isr: Decimal
+    iva_withheld: Decimal
+
+    @property
+    def total(self) -> Decimal:
+        return self.subtotal + self.iva - self.isr - self.iva_withheld
+
+
 def x(text: str) -> str:
     return escape(text, {'"': "&quot;"})
 
@@ -65,7 +77,7 @@ def invoice(
     subtotal: Decimal,
     method: str,
     withhold: bool,
-) -> tuple[str, str, Decimal]:
+) -> tuple[str, str, Totals]:
     iva = (subtotal * Decimal("0.16")).quantize(CENT)
     isr = (subtotal * Decimal("0.10")).quantize(CENT) if withhold else Decimal(0)
     iva_w = (subtotal * Decimal("0.106667")).quantize(CENT) if withhold else Decimal(0)
@@ -108,14 +120,23 @@ def invoice(
   <cfdi:Complemento>{stamp(stamp_id, when)}</cfdi:Complemento>
 </cfdi:Comprobante>
 """
-    return stamp_id, xml, total
+    return stamp_id, xml, Totals(subtotal, iva, isr, iva_w)
 
 
 def payment(
-    issuer: Party, receiver: Party, when: datetime, document: str, total: Decimal
+    issuer: Party, receiver: Party, when: datetime, document: str, totals: Totals
 ) -> tuple[str, str]:
-    subtotal = (total / Decimal("1.16")).quantize(CENT)
-    iva = total - subtotal
+    subtotal, iva, total = totals.subtotal, totals.iva, totals.total
+    withholdings = ""
+    if totals.isr:
+        withholdings = (
+            "<pago20:RetencionesDR>"
+            f'<pago20:RetencionDR BaseDR="{money(subtotal)}" ImpuestoDR="001" TipoFactorDR="Tasa" '
+            f'TasaOCuotaDR="0.100000" ImporteDR="{money(totals.isr)}"/>'
+            f'<pago20:RetencionDR BaseDR="{money(subtotal)}" ImpuestoDR="002" TipoFactorDR="Tasa" '
+            f'TasaOCuotaDR="0.106667" ImporteDR="{money(totals.iva_withheld)}"/>'
+            "</pago20:RetencionesDR>"
+        )
     stamp_id = str(uuid.UUID(int=random.getrandbits(128))).upper()
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:pago20="http://www.sat.gob.mx/Pagos20" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Fecha="{when.isoformat()}" SubTotal="0" Moneda="XXX" Total="0" TipoDeComprobante="P" Exportacion="01" LugarExpedicion="{issuer.zip_code}">
@@ -127,7 +148,7 @@ def payment(
       <pago20:Totales MontoTotalPagos="{money(total)}"/>
       <pago20:Pago FechaPago="{when.isoformat()}" FormaDePagoP="03" MonedaP="MXN" TipoCambioP="1" Monto="{money(total)}">
         <pago20:DoctoRelacionado IdDocumento="{document}" MonedaDR="MXN" EquivalenciaDR="1" NumParcialidad="1" ImpSaldoAnt="{money(total)}" ImpPagado="{money(total)}" ImpSaldoInsoluto="0.00" ObjetoImpDR="02">
-          <pago20:ImpuestosDR><pago20:TrasladosDR><pago20:TrasladoDR BaseDR="{money(subtotal)}" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.160000" ImporteDR="{money(iva)}"/></pago20:TrasladosDR></pago20:ImpuestosDR>
+          <pago20:ImpuestosDR><pago20:TrasladosDR><pago20:TrasladoDR BaseDR="{money(subtotal)}" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.160000" ImporteDR="{money(iva)}"/></pago20:TrasladosDR>{withholdings}</pago20:ImpuestosDR>
         </pago20:DoctoRelacionado>
       </pago20:Pago>
     </pago20:Pagos>
@@ -151,7 +172,7 @@ def main(target: Path) -> None:
             method = "PPD" if client[0] == CLIENTS[0][0] else "PUE"
             withhold = client[0] != CLIENTS[2][0]
             party = Party(*client)
-            stamp_id, xml, total = invoice(
+            stamp_id, xml, totals = invoice(
                 me,
                 party,
                 when,
@@ -165,7 +186,7 @@ def main(target: Path) -> None:
             (target / f"emitida-{stamp_id}.xml").write_text(xml, encoding="utf-8")
             if method == "PPD" and month < 12:
                 paid_at = when + timedelta(days=random.randint(20, 40))
-                pay_id, pay_xml = payment(me, party, paid_at, stamp_id, total)
+                pay_id, pay_xml = payment(me, party, paid_at, stamp_id, totals)
                 (target / f"pago-{pay_id}.xml").write_text(pay_xml, encoding="utf-8")
         for rfc, name, regime, zip_code, product, description in random.sample(SUPPLIERS, k=3):
             when = datetime(2026, month, random.randint(1, 28), random.randint(8, 20), 0)
