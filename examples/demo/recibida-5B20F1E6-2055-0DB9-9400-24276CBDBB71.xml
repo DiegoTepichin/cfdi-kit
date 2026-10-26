@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="4774" Fecha="2026-09-12T17:00:00" FormaPago="04" SubTotal="2200.00" Moneda="MXN" Total="2552.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" LugarExpedicion="40501">
+  <cfdi:Emisor Rfc="OÑO120726RX3" Nombre="ORGANICOS ÑAVEZ OSORIO" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" DomicilioFiscalReceptor="52140" RegimenFiscalReceptor="612" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="50202300" Cantidad="1" ClaveUnidad="E48" Descripcion="Cafetería" ValorUnitario="2200.00" Importe="2200.00" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="2200.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="352.00"/></cfdi:Traslados></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="352.00"><cfdi:Traslados><cfdi:Traslado Base="2200.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="352.00"/></cfdi:Traslados></cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="5B20F1E6-2055-0DB9-9400-24276CBDBB71" FechaTimbrado="2026-09-12T17:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="demo" SelloSAT="demo"/></cfdi:Complemento>
+</cfdi:Comprobante>

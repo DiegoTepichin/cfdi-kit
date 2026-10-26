@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="105" Fecha="2026-03-06T16:00:00" FormaPago="28" SubTotal="22500.00" Moneda="MXN" Total="21449.99" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" LugarExpedicion="52140">
+  <cfdi:Emisor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" RegimenFiscal="612"/>
+  <cfdi:Receptor Rfc="URE180429TM6" Nombre="UNIVERSIDAD ROBOTICA ESPAÑOLA" DomicilioFiscalReceptor="86991" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="81111500" Cantidad="1" ClaveUnidad="E48" Descripcion="Desarrollo de software" ValorUnitario="22500.00" Importe="22500.00" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="22500.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="3600.00"/></cfdi:Traslados><cfdi:Retenciones><cfdi:Retencion Base="22500.00" Impuesto="001" TipoFactor="Tasa" TasaOCuota="0.100000" Importe="2250.00"/><cfdi:Retencion Base="22500.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.106667" Importe="2400.01"/></cfdi:Retenciones></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosRetenidos="4650.01" TotalImpuestosTrasladados="3600.00"><cfdi:Retenciones><cfdi:Retencion Impuesto="001" Importe="2250.00"/><cfdi:Retencion Impuesto="002" Importe="2400.01"/></cfdi:Retenciones><cfdi:Traslados><cfdi:Traslado Base="22500.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="3600.00"/></cfdi:Traslados></cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="A06D7A69-1F3C-42B2-E2CB-BB93D9814559" FechaTimbrado="2026-03-06T16:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="demo" SelloSAT="demo"/></cfdi:Complemento>
+</cfdi:Comprobante>

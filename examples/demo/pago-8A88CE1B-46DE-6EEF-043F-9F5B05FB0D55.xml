@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:pago20="http://www.sat.gob.mx/Pagos20" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Fecha="2026-11-15T17:00:00" SubTotal="0" Moneda="XXX" Total="0" TipoDeComprobante="P" Exportacion="01" LugarExpedicion="52140">
+  <cfdi:Emisor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" RegimenFiscal="612"/>
+  <cfdi:Receptor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE" DomicilioFiscalReceptor="42501" RegimenFiscalReceptor="601" UsoCFDI="CP01"/>
+  <cfdi:Conceptos><cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0" ObjetoImp="01"/></cfdi:Conceptos>
+  <cfdi:Complemento>
+    <pago20:Pagos Version="2.0">
+      <pago20:Totales MontoTotalPagos="31459.99"/>
+      <pago20:Pago FechaPago="2026-11-15T17:00:00" FormaDePagoP="03" MonedaP="MXN" TipoCambioP="1" Monto="31459.99">
+        <pago20:DoctoRelacionado IdDocumento="25CE93FC-C95E-F1D0-4145-FF00E39F13D7" MonedaDR="MXN" EquivalenciaDR="1" NumParcialidad="1" ImpSaldoAnt="31459.99" ImpPagado="31459.99" ImpSaldoInsoluto="0.00" ObjetoImpDR="02">
+          <pago20:ImpuestosDR><pago20:TrasladosDR><pago20:TrasladoDR BaseDR="27120.68" ImpuestoDR="002" TipoFactorDR="Tasa" TasaOCuotaDR="0.160000" ImporteDR="4339.31"/></pago20:TrasladosDR></pago20:ImpuestosDR>
+        </pago20:DoctoRelacionado>
+      </pago20:Pago>
+    </pago20:Pagos>
+    <tfd:TimbreFiscalDigital Version="1.1" UUID="8A88CE1B-46DE-6EEF-043F-9F5B05FB0D55" FechaTimbrado="2026-11-15T17:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="demo" SelloSAT="demo"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

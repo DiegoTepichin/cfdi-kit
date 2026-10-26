@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="123" Fecha="2026-10-19T17:00:00" FormaPago="99" SubTotal="33000.00" Moneda="MXN" Total="31459.99" TipoDeComprobante="I" Exportacion="01" MetodoPago="PPD" LugarExpedicion="52140">
+  <cfdi:Emisor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" RegimenFiscal="612"/>
+  <cfdi:Receptor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE" DomicilioFiscalReceptor="42501" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="81111500" Cantidad="1" ClaveUnidad="E48" Descripcion="Desarrollo de software" ValorUnitario="33000.00" Importe="33000.00" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="33000.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="5280.00"/></cfdi:Traslados><cfdi:Retenciones><cfdi:Retencion Base="33000.00" Impuesto="001" TipoFactor="Tasa" TasaOCuota="0.100000" Importe="3300.00"/><cfdi:Retencion Base="33000.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.106667" Importe="3520.01"/></cfdi:Retenciones></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosRetenidos="6820.01" TotalImpuestosTrasladados="5280.00"><cfdi:Retenciones><cfdi:Retencion Impuesto="001" Importe="3300.00"/><cfdi:Retencion Impuesto="002" Importe="3520.01"/></cfdi:Retenciones><cfdi:Traslados><cfdi:Traslado Base="33000.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="5280.00"/></cfdi:Traslados></cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="25CE93FC-C95E-F1D0-4145-FF00E39F13D7" FechaTimbrado="2026-10-19T17:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="demo" SelloSAT="demo"/></cfdi:Complemento>
+</cfdi:Comprobante>

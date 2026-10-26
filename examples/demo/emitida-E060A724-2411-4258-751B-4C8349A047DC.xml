@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="103" Fecha="2026-02-19T17:00:00" FormaPago="28" SubTotal="26500.00" Moneda="MXN" Total="30740.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" LugarExpedicion="52140">
+  <cfdi:Emisor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" RegimenFiscal="612"/>
+  <cfdi:Receptor Rfc="H&amp;E951128469" Nombre="HERRERIA &amp; ELECTRICOS" DomicilioFiscalReceptor="06002" RegimenFiscalReceptor="601" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="81111500" Cantidad="1" ClaveUnidad="E48" Descripcion="Desarrollo de software" ValorUnitario="26500.00" Importe="26500.00" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="26500.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="4240.00"/></cfdi:Traslados></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="4240.00"><cfdi:Traslados><cfdi:Traslado Base="26500.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="4240.00"/></cfdi:Traslados></cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="E060A724-2411-4258-751B-4C8349A047DC" FechaTimbrado="2026-02-19T17:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="demo" SelloSAT="demo"/></cfdi:Complemento>
+</cfdi:Comprobante>
