@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="A" Folio="99547" Fecha="2026-04-08T09:00:00" FormaPago="28" SubTotal="550.00" Moneda="MXN" Total="638.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" LugarExpedicion="26015">
+  <cfdi:Emisor Rfc="KIJ0906199R1" Nombre="KERNEL INDUSTIA JUGUETERA" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" DomicilioFiscalReceptor="52140" RegimenFiscalReceptor="612" UsoCFDI="G03"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="43232100" Cantidad="1" ClaveUnidad="E48" Descripcion="Software" ValorUnitario="550.00" Importe="550.00" ObjetoImp="02">
+      <cfdi:Impuestos><cfdi:Traslados><cfdi:Traslado Base="550.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="88.00"/></cfdi:Traslados></cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="88.00"><cfdi:Traslados><cfdi:Traslado Base="550.00" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="88.00"/></cfdi:Traslados></cfdi:Impuestos>
+  <cfdi:Complemento><tfd:TimbreFiscalDigital Version="1.1" UUID="AB215122-44BE-CDCE-F4D4-75EC8BE40E7F" FechaTimbrado="2026-04-08T09:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="demo" SelloSAT="demo"/></cfdi:Complemento>
+</cfdi:Comprobante>

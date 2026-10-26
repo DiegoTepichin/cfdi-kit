@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from cfdi_kit import __version__
 from cfdi_kit.export import to_csv, to_excel
 from cfdi_kit.loader import LoadResult, load
+from cfdi_kit.report import build_report
 from cfdi_kit.summary import Basis, Summary, summarize, summary_frame
 from cfdi_kit.validate import Severity, validate
 
@@ -58,6 +59,13 @@ def _parser() -> argparse.ArgumentParser:
     check = commands.add_parser("validate", help="check totals, taxes, RFCs and duplicates")
     _add_inputs(check)
     check.set_defaults(handler=_validate)
+
+    report = commands.add_parser("report", help="write a self-contained HTML report for an RFC")
+    _add_inputs(report)
+    report.add_argument("--rfc", required=True, help="the RFC to report on")
+    report.add_argument("--basis", choices=[b.value for b in Basis], default=Basis.ACCRUAL.value)
+    report.add_argument("-o", "--output", type=Path, default=Path("cfdi-report.html"))
+    report.set_defaults(handler=_report)
     return parser
 
 
@@ -155,6 +163,16 @@ def _validate(args: argparse.Namespace) -> int:
     warnings = len(issues) - errors
     print(f"{errors} error(s), {warnings} warning(s)", file=sys.stderr)
     return EXIT_FAILURE if errors or result.errors else EXIT_OK
+
+
+def _report(args: argparse.Namespace) -> int:
+    result = load_inputs(args)
+    if not result.cfdis:
+        return EXIT_FAILURE
+    output: Path = args.output
+    output.write_text(build_report(result.cfdis, args.rfc, Basis(args.basis)), encoding="utf-8")
+    print(f"wrote {output}", file=sys.stderr)
+    return EXIT_OK
 
 
 if __name__ == "__main__":
