@@ -8,6 +8,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from datetime import date, datetime
 
 ZERO = Decimal(0)
@@ -48,6 +49,10 @@ class Tax:
     @property
     def amount_or_zero(self) -> Decimal:
         return self.amount if self.amount is not None else ZERO
+
+
+def sum_taxes(taxes: Iterable[Tax], kind: TaxKind, code: TaxCode) -> Decimal:
+    return sum((t.amount_or_zero for t in taxes if t.kind is kind and t.code == code), ZERO)
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,10 +179,7 @@ class Cfdi:
         return self.exchange_rate
 
     def tax_total(self, kind: TaxKind, code: TaxCode) -> Decimal:
-        return sum(
-            (t.amount_or_zero for t in self.taxes if t.kind is kind and t.code == code),
-            ZERO,
-        )
+        return sum_taxes(self.taxes, kind, code)
 
     @property
     def iva_transferred(self) -> Decimal:
