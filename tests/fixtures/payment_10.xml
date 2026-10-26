@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/3" xmlns:pago10="http://www.sat.gob.mx/Pagos" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="3.3" Serie="REP" Folio="91" Fecha="2026-01-20T10:00:00" SubTotal="0" Moneda="XXX" Total="0" TipoDeComprobante="P" LugarExpedicion="42501">
+  <cfdi:Emisor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="CACX7605101P8" Nombre="XOCHILT CASAS CHAVEZ" UsoCFDI="P01"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="84111506" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago" ValorUnitario="0" Importe="0"/>
+  </cfdi:Conceptos>
+  <cfdi:Complemento>
+    <pago10:Pagos Version="1.0">
+      <pago10:Pago FechaPago="2026-01-18T12:00:00" FormaDePagoP="03" MonedaP="USD" TipoCambioP="18.00" Monto="145.00">
+        <pago10:DoctoRelacionado IdDocumento="6F1C2A7E-1B2C-4D3E-9F40-0A1B2C3D4E07" Serie="US" Folio="5001" MonedaDR="USD" MetodoDePagoDR="PPD" NumParcialidad="1" ImpSaldoAnt="290.00" ImpPagado="145.00" ImpSaldoInsoluto="145.00"/>
+      </pago10:Pago>
+    </pago10:Pagos>
+    <tfd:TimbreFiscalDigital Version="1.1" UUID="6F1C2A7E-1B2C-4D3E-9F40-0A1B2C3D4E08" FechaTimbrado="2026-01-20T10:01:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="x" SelloSAT="x"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>

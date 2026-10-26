@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:nomina12="http://www.sat.gob.mx/nomina12" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" Version="4.0" Serie="N" Folio="2026-02" Fecha="2026-01-31T20:00:00" SubTotal="15500.00" Descuento="2300.00" Moneda="MXN" Total="13200.00" TipoDeComprobante="N" Exportacion="01" MetodoPago="PUE" LugarExpedicion="42501">
+  <cfdi:Emisor Rfc="EKU9003173C9" Nombre="ESCUELA KEMPER URGATE" RegimenFiscal="601"/>
+  <cfdi:Receptor Rfc="FUNK671228PH6" Nombre="KARLA FUENTE NOLASCO" DomicilioFiscalReceptor="01160" RegimenFiscalReceptor="605" UsoCFDI="CN01"/>
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="84111505" Cantidad="1" ClaveUnidad="ACT" Descripcion="Pago de nómina" ValorUnitario="15500.00" Importe="15500.00" Descuento="2300.00" ObjetoImp="01"/>
+  </cfdi:Conceptos>
+  <cfdi:Complemento>
+    <nomina12:Nomina Version="1.2" TipoNomina="O" FechaPago="2026-01-31" FechaInicialPago="2026-01-16" FechaFinalPago="2026-01-31" NumDiasPagados="16" TotalPercepciones="15500.00" TotalDeducciones="2300.00">
+      <nomina12:Percepciones TotalSueldos="15500.00" TotalGravado="15500.00" TotalExento="0.00">
+        <nomina12:Percepcion TipoPercepcion="001" Clave="001" Concepto="Sueldo" ImporteGravado="15500.00" ImporteExento="0.00"/>
+      </nomina12:Percepciones>
+      <nomina12:Deducciones TotalOtrasDeducciones="400.00" TotalImpuestosRetenidos="1900.00">
+        <nomina12:Deduccion TipoDeduccion="001" Clave="001" Concepto="IMSS" Importe="400.00"/>
+        <nomina12:Deduccion TipoDeduccion="002" Clave="002" Concepto="ISR" Importe="1900.00"/>
+      </nomina12:Deducciones>
+    </nomina12:Nomina>
+    <tfd:TimbreFiscalDigital Version="1.1" UUID="6F1C2A7E-1B2C-4D3E-9F40-0A1B2C3D4E06" FechaTimbrado="2026-01-31T20:05:00" RfcProvCertif="SAT970701NN3" NoCertificadoSAT="00001000000505142236" SelloCFD="x" SelloSAT="x"/>
+  </cfdi:Complemento>
+</cfdi:Comprobante>
