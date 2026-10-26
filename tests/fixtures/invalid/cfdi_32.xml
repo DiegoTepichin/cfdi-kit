@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/3" version="3.2" fecha="2016-01-01T00:00:00" tipoDeComprobante="ingreso"/>
