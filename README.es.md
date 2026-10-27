@@ -104,11 +104,11 @@ Revisa: timbre faltante; total, subtotal o descuento que no cuadran (se permite 
 ```python
 import cfdi_kit
 
-result = cfdi_kit.load(["examples/demo"])          # archivos, carpetas o ZIPs
+result = cfdi_kit.load(["examples/demo"])  # archivos, carpetas o ZIPs
 print(len(result.cfdis), "invoices,", len(result.errors), "errors")
 
 cfdi = result.cfdis[0]
-cfdi.uuid, cfdi.issuer.rfc, cfdi.total, cfdi.iva_transferred   # tipado, Decimal
+cfdi.uuid, cfdi.issuer.rfc, cfdi.total, cfdi.iva_transferred  # tipado, Decimal
 
 invoices = cfdi_kit.invoices_frame(result.cfdis, rfc="CACX7605101P8")  # pandas
 invoices.groupby("direction")["total_mxn"].sum()
