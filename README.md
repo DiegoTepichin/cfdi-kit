@@ -104,11 +104,11 @@ Checks: missing stamp, total / subtotal / discount that don't add up (one cent o
 ```python
 import cfdi_kit
 
-result = cfdi_kit.load(["examples/demo"])          # files, folders or ZIPs
+result = cfdi_kit.load(["examples/demo"])  # files, folders or ZIPs
 print(len(result.cfdis), "invoices,", len(result.errors), "errors")
 
 cfdi = result.cfdis[0]
-cfdi.uuid, cfdi.issuer.rfc, cfdi.total, cfdi.iva_transferred   # typed, Decimal
+cfdi.uuid, cfdi.issuer.rfc, cfdi.total, cfdi.iva_transferred  # typed, Decimal
 
 invoices = cfdi_kit.invoices_frame(result.cfdis, rfc="CACX7605101P8")  # pandas
 invoices.groupby("direction")["total_mxn"].sum()
