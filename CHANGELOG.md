@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `cfdi-kit risk PATHS --list FILE [--rfc RFC]` flags invoices whose issuer is on a local copy of the SAT article 69-B list, by status (`Definitivo`, `Presunto`, `Desvirtuado`, `Sentencia Favorable`). It exits with status 1 on presumed or definitive matches.
+- `cfdi-kit report --risk-list FILE` adds a supplier risk section to the HTML report.
+- Library API: `load_snapshot`, `find_matches` and their types.
+- `examples/demo-69b.csv`, a synthetic list for the demo invoices.
+
 ## [1.0.0] - 2026-10-26
 
 First public release.

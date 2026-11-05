@@ -99,9 +99,38 @@ error    total-mismatch                broken.xml  Total is 99999.99 but SubTota
 
 Checks: missing stamp, total / subtotal / discount that don't add up (one cent of rounding per line allowed), invoice vs line-item tax totals, malformed RFCs, PPD invoices with a payment form other than 99, foreign currency without an exchange rate and duplicate UUIDs. The command exits with status 1 when it finds errors, so you can use it in scripts.
 
+### `risk`: check suppliers against the SAT 69-B list
+
+The SAT publishes the taxpayers it presumes issue invoices for non-existent operations (article 69-B of the Código Fiscal de la Federación). Download the file once and check your suppliers against it, offline:
+
+```bash
+curl -o Listado_completo_69-B.csv http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_completo_69-B.csv
+cfdi-kit risk PATHS --list Listado_completo_69-B.csv [--rfc RFC]
+```
+
+```text
+$ cfdi-kit risk examples/demo --list examples/demo-69b.csv --rfc CACX7605101P8
+Definitivo           KIJ0906199R1   2026-01-04  AF67D461-E416-3207-D094-499602F0EE99      1,044.00 MXN  KERNEL INDUSTIA JUGUETERA
+Presunto             MAG041126GT8   2026-02-17  D1711CBD-2106-119E-C40D-31B5397A7623        522.00 MXN  MINERA AGUILAR
+...
+29 match(es) against the 69-B list dated 2025-12-31, 18 presumed or definitive
+```
+
+`examples/demo-69b.csv` is a synthetic list for the demo invoices, not the SAT's. With the real file (14,234 rows, dated 31 December 2025), the same 63 demo invoices are checked in about 0.3 seconds.
+
+- The command reads one local file and your invoices; it never goes online. Download the list yourself and note its date: it is printed with every result.
+- Each invoice whose **issuer** is on the list is shown with the SAT's status: `Definitivo`, `Presunto`, `Desvirtuado` or `Sentencia Favorable`. With `--rfc`, only invoices you received are checked.
+- The SAT file can list one RFC in several rows (separate proceedings, for example `Definitivo` and `Sentencia Favorable`). The rows are not in chronological order, so a result shows the most serious one and a later row never clears an earlier one.
+- The command exits with status 1 if any match is `Presunto` or `Definitivo`.
+- `report --risk-list FILE` adds the same table to the HTML report.
+
+A match is a coincidence with a public list, not an accusation. The list changes, taxpayers can be cleared, and the tool does not replace an accountant.
+
 ## Python API
 
 ```python
+from pathlib import Path
+
 import cfdi_kit
 
 result = cfdi_kit.load(["examples/demo"])  # files, folders or ZIPs
@@ -117,6 +146,9 @@ summary = cfdi_kit.summarize(result.cfdis, "CACX7605101P8", cfdi_kit.Basis.CASH)
 cfdi_kit.summary_frame(summary)
 
 issues = cfdi_kit.validate(result.cfdis)
+
+snapshot = cfdi_kit.load_snapshot(Path("Listado_completo_69-B.csv"))  # your own download
+matches = cfdi_kit.find_matches(result.cfdis, snapshot, rfc="CACX7605101P8")
 ```
 
 Also available: `parse_file`, `parse_bytes`, `concepts_frame`, `payments_frame`, `to_csv` and `to_excel`. The package ships type hints (`py.typed`).
@@ -125,7 +157,7 @@ Also available: `parse_file`, `parse_bytes`, `concepts_frame`, `payments_frame`,
 
 - It reads the XML only. It does not verify the digital seals or ask the SAT whether an invoice was cancelled; remove cancelled invoices before summarizing.
 - The summary is an aid to review a period. It is not a tax return and does not replace an accountant.
-- It does not issue, stamp, cancel or download invoices.
+- It does not issue, stamp, cancel or download invoices, and it does not download the 69-B list for you.
 
 ## Development
 
