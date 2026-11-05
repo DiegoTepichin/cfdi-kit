@@ -16,9 +16,15 @@ from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
+from cfdi_kit.export import Direction, direction
+
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
+    from datetime import datetime
+    from decimal import Decimal
     from pathlib import Path
+
+    from cfdi_kit.models import Cfdi
 
 MONTHS = (
     "enero",
@@ -157,3 +163,45 @@ def _as_of(preamble: list[list[str]]) -> date | None:
             if month.lower() in MONTHS:
                 return date(int(year), MONTHS.index(month.lower()) + 1, int(day))
     return None
+
+
+@dataclass(frozen=True, slots=True)
+class Match:
+    """An invoice whose issuer appears on the list."""
+
+    uuid: str | None
+    source: str | None
+    issued_at: datetime
+    total: Decimal
+    currency: str
+    issuer_rfc: str
+    issuer_name: str | None
+    listings: tuple[Listing, ...]
+
+    @property
+    def status(self) -> ListingStatus:
+        return worst(self.listings).status
+
+
+def find_matches(cfdis: Sequence[Cfdi], snapshot: Snapshot, rfc: str | None = None) -> list[Match]:
+    """Invoices issued by a listed taxpayer, the most serious first.
+
+    With `rfc`, only invoices that RFC received are checked: its own and unrelated invoices say
+    nothing about its suppliers.
+    """
+    matches = [
+        Match(
+            uuid=cfdi.uuid,
+            source=cfdi.source,
+            issued_at=cfdi.issued_at,
+            total=cfdi.total,
+            currency=cfdi.currency,
+            issuer_rfc=cfdi.issuer.rfc,
+            issuer_name=cfdi.issuer.name,
+            listings=listings,
+        )
+        for cfdi in cfdis
+        if (rfc is None or direction(cfdi, rfc) is Direction.RECEIVED)
+        and (listings := snapshot.find(cfdi.issuer.rfc))
+    ]
+    return sorted(matches, key=lambda match: (-match.status.gravity, match.issued_at))

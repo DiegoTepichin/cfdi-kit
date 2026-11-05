@@ -1,17 +1,20 @@
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
 import pytest
 
+from cfdi_kit.models import Cfdi
 from cfdi_kit.risk import (
     Listing,
     ListingStatus,
     SnapshotError,
+    find_matches,
     load_snapshot,
     parse_snapshot,
     worst,
 )
-from tests.conftest import FIXTURES
+from tests.conftest import FIXTURES, MY_RFC, load
 
 LIST_FILE = FIXTURES / "risk" / "listado_69b.csv"
 HEADER = "No,RFC,Nombre del Contribuyente,Situación del contribuyente\n"
@@ -94,3 +97,71 @@ def test_only_presumed_and_definitive_are_alerts() -> None:
 def test_rejects_files_that_are_not_the_list(text: str, message: str) -> None:
     with pytest.raises(SnapshotError, match=message):
         parse_snapshot(text)
+
+
+def _issued_by(cfdi: Cfdi, rfc: str) -> Cfdi:
+    return replace(cfdi, issuer=replace(cfdi.issuer, rfc=rfc, name="SYNTHETIC SUPPLIER"))
+
+
+@pytest.mark.parametrize(
+    ("issuer", "status"),
+    [
+        ("EKU9003173C9", ListingStatus.DEFINITIVE),
+        ("KIJ0906199R1", ListingStatus.PRESUMED),
+        ("MAG041126GT8", ListingStatus.CLEARED),
+        ("XIA190128J61", ListingStatus.FAVORABLE_RULING),
+    ],
+)
+def test_matches_an_invoice_for_each_status(issuer: str, status: ListingStatus) -> None:
+    cfdi = _issued_by(load("expense_pue_40.xml"), issuer)
+
+    (match,) = find_matches([cfdi], load_snapshot(LIST_FILE))
+
+    assert match.status is status
+    assert match.issuer_rfc == issuer
+    assert match.uuid == cfdi.uuid
+    assert match.total == cfdi.total
+
+
+def test_unlisted_issuers_do_not_match(all_valid: list[Cfdi]) -> None:
+    unlisted = [_issued_by(cfdi, "CACX7605101P8") for cfdi in all_valid]
+
+    assert find_matches(unlisted, load_snapshot(LIST_FILE)) == []
+
+
+def test_lists_the_most_serious_first() -> None:
+    base = load("expense_pue_40.xml")
+    cfdis = [
+        _issued_by(base, "MAG041126GT8"),
+        _issued_by(base, "KIJ0906199R1"),
+        _issued_by(base, "EKU9003173C9"),
+    ]
+
+    statuses = [m.status for m in find_matches(cfdis, load_snapshot(LIST_FILE))]
+
+    assert statuses == [ListingStatus.DEFINITIVE, ListingStatus.PRESUMED, ListingStatus.CLEARED]
+
+
+def test_with_an_rfc_only_received_invoices_are_checked() -> None:
+    received = _issued_by(load("expense_pue_40.xml"), "EKU9003173C9")
+    issued_by_me = replace(received, issuer=replace(received.issuer, rfc=MY_RFC))
+    issued_by_listed_to_other = replace(
+        received, receiver=replace(received.receiver, rfc="CACX7605101P8")
+    )
+    snapshot = load_snapshot(LIST_FILE)
+
+    assert len(find_matches([received], snapshot, MY_RFC)) == 1
+    assert find_matches([issued_by_me], snapshot, MY_RFC) == []
+    assert find_matches([issued_by_listed_to_other], snapshot, "XAXX010101000") == []
+    assert len(find_matches([issued_by_listed_to_other], snapshot)) == 1
+
+
+def test_a_repeated_rfc_is_judged_by_its_worst_entry() -> None:
+    snapshot = parse_snapshot(
+        HEADER + "1,EKU9003173C9,ONE,Definitivo\n2,EKU9003173C9,ONE,Sentencia Favorable\n"
+    )
+
+    (match,) = find_matches([load("expense_pue_40.xml")], snapshot)
+
+    assert match.status is ListingStatus.DEFINITIVE
+    assert len(match.listings) == 2
