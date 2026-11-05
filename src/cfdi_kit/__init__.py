@@ -6,6 +6,7 @@ from cfdi_kit.export import concepts_frame, invoices_frame, payments_frame, to_c
 from cfdi_kit.loader import LoadResult, load
 from cfdi_kit.models import Cfdi, InvoiceType
 from cfdi_kit.parser import CfdiParseError, parse_bytes, parse_file
+from cfdi_kit.risk import Listing, ListingStatus, Match, Snapshot, find_matches, load_snapshot
 from cfdi_kit.summary import Basis, Summary, summarize, summary_frame
 from cfdi_kit.validate import Issue, Severity, validate
 
@@ -17,13 +18,19 @@ __all__ = [
     "CfdiParseError",
     "InvoiceType",
     "Issue",
+    "Listing",
+    "ListingStatus",
     "LoadResult",
+    "Match",
     "Severity",
+    "Snapshot",
     "Summary",
     "__version__",
     "concepts_frame",
+    "find_matches",
     "invoices_frame",
     "load",
+    "load_snapshot",
     "parse_bytes",
     "parse_file",
     "payments_frame",

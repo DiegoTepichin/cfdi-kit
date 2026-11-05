@@ -11,6 +11,7 @@ from cfdi_kit import __version__
 from cfdi_kit.export import to_csv, to_excel
 from cfdi_kit.loader import LoadResult, load
 from cfdi_kit.report import build_report
+from cfdi_kit.risk import Match, Snapshot, SnapshotError, find_matches, load_snapshot
 from cfdi_kit.summary import Basis, Summary, summarize, summary_frame
 from cfdi_kit.validate import Severity, validate
 
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 
 EXIT_OK = 0
 EXIT_FAILURE = 1
+RISK_LIST_HELP = "local copy of the SAT's Listado_completo_69-B.csv (see the README to download it)"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -65,7 +67,14 @@ def _parser() -> argparse.ArgumentParser:
     report.add_argument("--rfc", required=True, help="the RFC to report on")
     report.add_argument("--basis", choices=[b.value for b in Basis], default=Basis.ACCRUAL.value)
     report.add_argument("-o", "--output", type=Path, default=Path("cfdi-report.html"))
+    report.add_argument("--risk-list", type=Path, metavar="CSV", help=RISK_LIST_HELP)
     report.set_defaults(handler=_report)
+
+    risk = commands.add_parser("risk", help="flag suppliers that appear on the SAT 69-B list")
+    _add_inputs(risk)
+    risk.add_argument("--list", type=Path, required=True, metavar="CSV", help=RISK_LIST_HELP)
+    risk.add_argument("--rfc", help="your RFC: only invoices you received are checked")
+    risk.set_defaults(handler=_risk)
     return parser
 
 
@@ -165,12 +174,56 @@ def _validate(args: argparse.Namespace) -> int:
     return EXIT_FAILURE if errors or result.errors else EXIT_OK
 
 
+def _read_snapshot(path: Path) -> Snapshot | None:
+    try:
+        return load_snapshot(path)
+    except (OSError, SnapshotError) as error:
+        print(f"cannot read {path}: {error}", file=sys.stderr)
+        return None
+
+
+def _risk(args: argparse.Namespace) -> int:
+    snapshot = _read_snapshot(args.list)
+    if snapshot is None:
+        return EXIT_FAILURE
+    result = load_inputs(args)
+    matches = find_matches(result.cfdis, snapshot, args.rfc)
+    for match in matches:
+        print(render_match(match))
+    alerts = sum(1 for match in matches if match.status.is_alert)
+    dated = f"dated {snapshot.as_of.isoformat()}" if snapshot.as_of else "of unknown date"
+    print(
+        f"{len(matches)} match(es) against the 69-B list {dated}, {alerts} presumed or definitive",
+        file=sys.stderr,
+    )
+    print(
+        "a match is a coincidence with a public list, not an accusation; ask your accountant",
+        file=sys.stderr,
+    )
+    return EXIT_FAILURE if alerts or result.errors else EXIT_OK
+
+
+def render_match(match: Match) -> str:
+    issued = match.issued_at.date().isoformat()
+    return (
+        f"{match.status.value:19}  {match.issuer_rfc:13}  {issued}  {match.uuid or '-':36}  "
+        f"{match.total:>12,.2f} {match.currency}  {match.issuer_name or ''}"
+    )
+
+
 def _report(args: argparse.Namespace) -> int:
+    snapshot = None
+    if args.risk_list is not None:
+        snapshot = _read_snapshot(args.risk_list)
+        if snapshot is None:
+            return EXIT_FAILURE
     result = load_inputs(args)
     if not result.cfdis:
         return EXIT_FAILURE
     output: Path = args.output
-    output.write_text(build_report(result.cfdis, args.rfc, Basis(args.basis)), encoding="utf-8")
+    output.write_text(
+        build_report(result.cfdis, args.rfc, Basis(args.basis), risk=snapshot), encoding="utf-8"
+    )
     print(f"wrote {output}", file=sys.stderr)
     return EXIT_OK
 

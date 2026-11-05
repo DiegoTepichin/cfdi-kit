@@ -29,13 +29,13 @@ v1.0 scope and out-of-scope list live in `docs/PLAN.md`. Ideas beyond it go to G
 
 - `uv sync`: install the project and dev dependencies.
 - `uv run ruff check .` / `uv run ruff format --check .` / `uv run mypy .` / `uv run pytest`: the CI checks.
-- `uv run cfdi-kit parse|summary|validate|report PATHS ...`: the CLI (see README).
+- `uv run cfdi-kit parse|summary|validate|report|risk PATHS ...`: the CLI (see README).
 - `uv run python examples/generate_demo.py examples/demo`: regenerate the synthetic demo invoices.
 - `uv build`: build the sdist and wheel.
 
 ## Structure
 
-- `src/cfdi_kit/`: `models`, `parser`, `loader`, `catalogs`, `export`, `summary`, `validate`, `report` (+ `report.css`), `cli`.
+- `src/cfdi_kit/`: `models`, `parser`, `loader`, `catalogs`, `export`, `summary`, `validate`, `risk` (69-B list), `report` (+ `report.css`), `cli`.
 - `tests/`: one test module per source module; synthetic XML in `tests/fixtures/`.
-- `examples/`: demo generator and generated demo invoices.
+- `examples/`: demo generator, generated demo invoices and a synthetic 69-B list.
 - `docs/`: `PLAN.md` and the README screenshot.

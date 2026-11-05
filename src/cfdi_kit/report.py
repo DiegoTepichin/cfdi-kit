@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from cfdi_kit import __version__
 from cfdi_kit.export import Direction, direction
 from cfdi_kit.models import ZERO, InvoiceType
+from cfdi_kit.risk import ListingStatus, Match, Snapshot, find_matches
 from cfdi_kit.summary import Basis, MonthSummary, Summary, summarize
 from cfdi_kit.validate import Issue, validate
 
@@ -52,6 +53,7 @@ def build_report(
     rfc: str,
     basis: Basis = Basis.ACCRUAL,
     generated_at: datetime | None = None,
+    risk: Snapshot | None = None,
 ) -> str:
     summary = summarize(cfdis, rfc, basis)
     issues = validate(cfdis)
@@ -65,6 +67,7 @@ def build_report(
             "Top suppliers", _party_table(top_parties(cfdis, summary.rfc, Direction.RECEIVED))
         ),
         _section("Open PPD balances", _balances_table(open_balances(cfdis, summary.rfc))),
+        *_risk_sections(cfdis, summary.rfc, risk),
         _section(f"Validation ({len(issues)} issue(s))", _issues_table(issues)),
     ]
     return PAGE.format(
@@ -318,6 +321,45 @@ def _issues_table(issues: Sequence[Issue]) -> str:
         for i in issues
     ]
     return _table(["Severity", "Check", "Message", "File"], rows, numeric_from=4)
+
+
+BADGE_CLASS = {
+    ListingStatus.DEFINITIVE: "error",
+    ListingStatus.PRESUMED: "warning",
+    ListingStatus.CLEARED: "muted",
+    ListingStatus.FAVORABLE_RULING: "muted",
+}
+
+
+def _risk_sections(cfdis: Sequence[Cfdi], rfc: str, snapshot: Snapshot | None) -> list[str]:
+    if snapshot is None:
+        return []
+    matches = find_matches(cfdis, snapshot, rfc)
+    dated = f"dated {snapshot.as_of.isoformat()}" if snapshot.as_of else "of unknown date"
+    note = (
+        f'<p class="empty">Suppliers compared with a local copy of the SAT article 69-B list, '
+        f"{escape(dated)}. A match is a coincidence with a public list, not an accusation: the "
+        "list changes and taxpayers can be cleared. Review it with your accountant.</p>"
+    )
+    title = f"Supplier risk, SAT 69-B ({len(matches)} match(es))"
+    return [_section(title, note + _risk_table(matches))]
+
+
+def _risk_table(matches: Sequence[Match]) -> str:
+    rows = [
+        [
+            f'<span class="badge {BADGE_CLASS[m.status]}">{escape(m.status.value)}</span>',
+            escape(m.issuer_rfc),
+            escape(m.issuer_name or ""),
+            escape(m.issued_at.date().isoformat()),
+            escape(m.uuid or ""),
+            escape(m.currency),
+            _money(m.total),
+        ]
+        for m in matches
+    ]
+    headers = ["Status", "RFC", "Name", "Issued", "UUID", "Currency", "Total"]
+    return _table(headers, rows, numeric_from=5)
 
 
 PAGE = """<!doctype html>

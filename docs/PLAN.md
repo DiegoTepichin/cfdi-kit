@@ -53,6 +53,10 @@ xml / zip ──► loader ──► parser ──► Cfdi (frozen dataclasses, 
 
 Stamping, issuing or cancelling invoices; downloading from the SAT portal; checking cancellation status with the SAT web service; tax return calculations; any cloud service.
 
+## After 1.0: supplier risk
+
+`cfdi-kit risk` cross-checks invoice issuers against a copy of the SAT article 69-B list that the user downloads. It widens the v1.0 scope without breaking its rule that nothing leaves the machine: the library never fetches the list. It reports coincidences with a public list, never accusations. Showing the list's history per RFC, or refreshing it automatically, stay as GitHub issues.
+
 ## Milestones (one branch and PR each)
 
 | # | Branch | Content |

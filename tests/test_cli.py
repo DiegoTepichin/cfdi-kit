@@ -111,3 +111,95 @@ def test_validate_fails_on_errors(tmp_path: Path, capsys: pytest.CaptureFixture[
 
 def test_validate_fails_on_unreadable_files(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["validate", str(FIXTURES / "invalid")]) == 1
+
+
+RISK_LIST = FIXTURES / "risk" / "listado_69b.csv"
+
+
+def test_risk_flags_suppliers_on_the_list(
+    clean_folder: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    code = main(["risk", str(clean_folder), "--list", str(RISK_LIST), "--rfc", MY_RFC])
+
+    captured = capsys.readouterr()
+    assert code == 1
+    lines = captured.out.splitlines()
+    assert lines
+    assert all(line.startswith("Definitivo") and "EKU9003173C9" in line for line in lines)
+    assert "list dated 2025-12-31" in captured.err
+    assert "not an accusation" in captured.err
+
+
+def test_risk_passes_when_no_supplier_is_listed(
+    clean_folder: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    other = tmp_path / "other.csv"
+    other.write_text(
+        "No,RFC,Nombre del Contribuyente,Situación del contribuyente\n"
+        "1,ZZZ010101ZZ1,NOBODY,Definitivo\n",
+        encoding="utf-8",
+    )
+
+    assert main(["risk", str(clean_folder), "--list", str(other)]) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "0 match(es)" in captured.err
+
+
+def test_risk_with_only_cleared_matches_is_not_a_failure(
+    clean_folder: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    cleared = tmp_path / "cleared.csv"
+    cleared.write_text(
+        "No,RFC,Nombre del Contribuyente,Situación del contribuyente\n"
+        "1,EKU9003173C9,ESCUELA KEMPER URGATE,Desvirtuado\n",
+        encoding="utf-8",
+    )
+
+    assert main(["risk", str(clean_folder), "--list", str(cleared)]) == 0
+
+    assert "Desvirtuado" in capsys.readouterr().out
+
+
+def test_risk_explains_a_missing_list(
+    clean_folder: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    missing = tmp_path / "missing.csv"
+
+    assert main(["risk", str(clean_folder), "--list", str(missing)]) == 1
+
+    assert f"cannot read {missing}" in capsys.readouterr().err
+
+
+def test_risk_explains_a_file_that_is_not_the_list(
+    clean_folder: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    wrong = tmp_path / "wrong.csv"
+    wrong.write_text("a,b\n1,2\n", encoding="utf-8")
+
+    assert main(["risk", str(clean_folder), "--list", str(wrong)]) == 1
+
+    assert "no header row" in capsys.readouterr().err
+
+
+def test_report_with_a_risk_list(clean_folder: Path, tmp_path: Path) -> None:
+    output = tmp_path / "report.html"
+
+    args = ["report", str(clean_folder), "--rfc", MY_RFC, "-o", str(output)]
+
+    code = main([*args, "--risk-list", str(RISK_LIST)])
+
+    assert code == 0
+    assert "Supplier risk, SAT 69-B" in output.read_text(encoding="utf-8")
+
+
+def test_report_stops_on_an_unreadable_risk_list(clean_folder: Path, tmp_path: Path) -> None:
+    output = tmp_path / "report.html"
+
+    args = ["report", str(clean_folder), "--rfc", MY_RFC, "-o", str(output)]
+
+    code = main([*args, "--risk-list", str(tmp_path / "missing.csv")])
+
+    assert code == 1
+    assert not output.exists()

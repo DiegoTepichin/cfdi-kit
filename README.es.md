@@ -99,9 +99,38 @@ error    total-mismatch                broken.xml  Total is 99999.99 but SubTota
 
 Revisa: timbre faltante; total, subtotal o descuento que no cuadran (se permite un centavo de redondeo por concepto); impuestos de la factura contra los de los conceptos; RFC mal formados; facturas PPD con forma de pago distinta de 99; moneda extranjera sin tipo de cambio y UUID duplicados. Termina con código 1 si encuentra errores, para usarlo en scripts.
 
+### `risk`: revisa a tus proveedores contra la lista 69-B del SAT
+
+El SAT publica a los contribuyentes que presume emiten facturas por operaciones inexistentes (artículo 69-B del Código Fiscal de la Federación). Descarga el archivo una vez y revisa a tus proveedores sin conexión:
+
+```bash
+curl -o Listado_completo_69-B.csv http://omawww.sat.gob.mx/cifras_sat/Documents/Listado_completo_69-B.csv
+cfdi-kit risk RUTAS --list Listado_completo_69-B.csv [--rfc RFC]
+```
+
+```text
+$ cfdi-kit risk examples/demo --list examples/demo-69b.csv --rfc CACX7605101P8
+Definitivo           KIJ0906199R1   2026-01-04  AF67D461-E416-3207-D094-499602F0EE99      1,044.00 MXN  KERNEL INDUSTIA JUGUETERA
+Presunto             MAG041126GT8   2026-02-17  D1711CBD-2106-119E-C40D-31B5397A7623        522.00 MXN  MINERA AGUILAR
+...
+29 match(es) against the 69-B list dated 2025-12-31, 18 presumed or definitive
+```
+
+`examples/demo-69b.csv` es una lista sintética para las facturas de demostración, no la del SAT. Con el archivo real (14,234 filas, con fecha del 31 de diciembre de 2025), las mismas 63 facturas de la demo se revisan en unos 0.3 segundos.
+
+- El comando lee un archivo local y tus facturas; nunca se conecta a internet. Descarga tú la lista y anota su fecha: se imprime con cada resultado.
+- Cada factura cuyo **emisor** está en la lista se muestra con el estatus del SAT: `Definitivo`, `Presunto`, `Desvirtuado` o `Sentencia Favorable`. Con `--rfc`, solo se revisan las facturas que recibiste.
+- El archivo del SAT puede listar un RFC en varias filas (trámites distintos, por ejemplo `Definitivo` y `Sentencia Favorable`). Las filas no están en orden cronológico, así que el resultado muestra la más grave y una fila posterior nunca absuelve a una anterior.
+- El comando termina con estado 1 si alguna coincidencia es `Presunto` o `Definitivo`.
+- `report --risk-list ARCHIVO` agrega la misma tabla al reporte HTML.
+
+Una coincidencia es una coincidencia con una lista pública, no una acusación. La lista cambia, los contribuyentes pueden desvirtuar y la herramienta no sustituye a un contador.
+
 ## API de Python
 
 ```python
+from pathlib import Path
+
 import cfdi_kit
 
 result = cfdi_kit.load(["examples/demo"])  # archivos, carpetas o ZIPs
@@ -117,6 +146,9 @@ summary = cfdi_kit.summarize(result.cfdis, "CACX7605101P8", cfdi_kit.Basis.CASH)
 cfdi_kit.summary_frame(summary)
 
 issues = cfdi_kit.validate(result.cfdis)
+
+snapshot = cfdi_kit.load_snapshot(Path("Listado_completo_69-B.csv"))  # tu propia descarga
+matches = cfdi_kit.find_matches(result.cfdis, snapshot, rfc="CACX7605101P8")
 ```
 
 También: `parse_file`, `parse_bytes`, `concepts_frame`, `payments_frame`, `to_csv` y `to_excel`. El paquete incluye anotaciones de tipos (`py.typed`).
@@ -125,7 +157,7 @@ También: `parse_file`, `parse_bytes`, `concepts_frame`, `payments_frame`, `to_c
 
 - Solo lee el XML. No verifica los sellos digitales ni consulta al SAT si una factura fue cancelada; quita las canceladas antes de resumir.
 - El resumen es una ayuda para revisar un periodo. No es una declaración y no sustituye a tu contador.
-- No emite, timbra, cancela ni descarga facturas.
+- No emite, timbra, cancela ni descarga facturas, ni descarga por ti la lista 69-B.
 
 ## Desarrollo
 
