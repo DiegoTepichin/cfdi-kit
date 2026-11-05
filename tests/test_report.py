@@ -1,4 +1,5 @@
 import re
+from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -9,6 +10,7 @@ from cfdi_kit.cli import main
 from cfdi_kit.export import Direction
 from cfdi_kit.models import Cfdi
 from cfdi_kit.report import _ceil_to, _nice_step, build_report, open_balances, top_parties
+from cfdi_kit.risk import load_snapshot, parse_snapshot
 from cfdi_kit.summary import Basis
 from tests.conftest import FIXTURES, MY_RFC, load
 
@@ -107,3 +109,33 @@ def test_bars_stay_inside_the_plot(all_valid: list[Cfdi]) -> None:
 
     tops = [float(v) for v in re.findall(r'<rect class="bar[^"]*" x="[^"]+" y="([^"]+)"', html)]
     assert min(tops) >= 12
+
+
+def test_report_has_no_risk_section_without_a_list(all_valid: list[Cfdi]) -> None:
+    assert "69-B" not in build_report(all_valid, MY_RFC, generated_at=GENERATED)
+
+
+def test_report_lists_suppliers_found_on_the_69b_list() -> None:
+    snapshot = load_snapshot(FIXTURES / "risk" / "listado_69b.csv")
+    cfdi = load("expense_pue_40.xml")
+    listed = replace(cfdi, issuer=replace(cfdi.issuer, rfc="KIJ0906199R1", name="A & B <SA>"))
+
+    html = build_report([listed], MY_RFC, generated_at=GENERATED, risk=snapshot)
+
+    assert "Supplier risk, SAT 69-B (1 match(es))" in html
+    assert "dated 2025-12-31" in html
+    assert '<span class="badge warning">Presunto</span>' in html
+    assert "A &amp; B &lt;SA&gt;" in html
+    assert "not an accusation" in html
+
+
+def test_report_says_when_no_supplier_is_listed(all_valid: list[Cfdi]) -> None:
+    snapshot = parse_snapshot(
+        "No,RFC,Nombre del Contribuyente,Situación del contribuyente\n"
+        "1,ZZZ010101ZZ1,NOBODY,Definitivo\n"
+    )
+
+    html = build_report(all_valid, MY_RFC, generated_at=GENERATED, risk=snapshot)
+
+    assert "Supplier risk, SAT 69-B (0 match(es))" in html
+    assert "Nothing to show." in html
