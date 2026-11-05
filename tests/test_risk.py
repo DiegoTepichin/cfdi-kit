@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from cfdi_kit.loader import load as load_folder
 from cfdi_kit.models import Cfdi
 from cfdi_kit.risk import (
     Listing,
@@ -165,3 +166,12 @@ def test_a_repeated_rfc_is_judged_by_its_worst_entry() -> None:
 
     assert match.status is ListingStatus.DEFINITIVE
     assert len(match.listings) == 2
+
+
+def test_the_demo_list_covers_every_status_in_the_demo_invoices() -> None:
+    examples = Path(__file__).parents[1] / "examples"
+    snapshot = load_snapshot(examples / "demo-69b.csv")
+
+    matches = find_matches(load_folder([examples / "demo"]).cfdis, snapshot, MY_RFC)
+
+    assert {match.status for match in matches} == set(ListingStatus)
