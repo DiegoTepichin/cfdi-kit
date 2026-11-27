@@ -74,7 +74,7 @@ CFDI 3.2 y anteriores se reportan como no soportados.
 
 ### `parse`: Excel o CSV
 
-`cfdi-kit parse RUTAS -o salida.xlsx [--rfc RFC]` escribe tres hojas: `invoices` (una fila por CFDI, con impuestos, totales en MXN y descripciones de los catálogos del SAT), `line_items` (conceptos) y `payments` (cada factura liquidada en un complemento de pago). Con `-o salida.csv` escribe solo la tabla de facturas. `--rfc` agrega la columna `direction` (`issued` emitida / `received` recibida).
+`cfdi-kit parse RUTAS -o salida.xlsx [--rfc RFC]` escribe tres hojas: `invoices` (una fila por CFDI, con impuestos, totales en MXN y descripciones de los catálogos del SAT), `line_items` (conceptos) y `payments` (cada factura liquidada en un complemento de pago). Con `-o salida.csv` escribe solo la tabla de facturas. `--rfc` agrega la columna `direction` (`issued` emitida / `received` recibida). El texto de las facturas viene de terceros: en Excel se guarda como texto, nunca como fórmula; en CSV, el texto que empieza con `=`, `+`, `-`, `@`, tabulador o salto de línea lleva un apóstrofo al inicio.
 
 ### `summary`: ingresos, gastos e IVA por mes
 
