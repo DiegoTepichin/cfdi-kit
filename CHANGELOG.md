@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] - Unreleased
 
 ### Added
 
@@ -37,4 +37,5 @@ First public release.
 - `cfdi-kit` CLI with `parse`, `summary`, `validate` and `report`.
 - Synthetic demo generator and a year of demo invoices.
 
+[1.1.0]: https://github.com/DiegoTepichin/cfdi-kit/compare/v1.0.0...main
 [1.0.0]: https://github.com/DiegoTepichin/cfdi-kit/releases/tag/v1.0.0
