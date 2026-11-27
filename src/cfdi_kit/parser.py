@@ -35,6 +35,9 @@ TFD = "http://www.sat.gob.mx/TimbreFiscalDigital"
 PAGOS10 = "http://www.sat.gob.mx/Pagos"
 PAGOS20 = "http://www.sat.gob.mx/Pagos20"
 NOMINA12 = "http://www.sat.gob.mx/nomina12"
+MAX_AMOUNT_EXPONENT = 17
+"""CFDI amounts have at most 18 integer digits."""
+YEARS = range(2000, 2100)
 
 
 class CfdiParseError(ValueError):
@@ -53,7 +56,7 @@ def parse_file(path: str | Path) -> Cfdi:
 def parse_bytes(data: bytes, source: str | None = None) -> Cfdi:
     try:
         root = ET.fromstring(data.lstrip())
-    except ET.ParseError as exc:
+    except (ET.ParseError, LookupError, ValueError) as exc:
         raise CfdiParseError(f"invalid XML ({exc})", source) from exc
     try:
         return _parse_root(root, source)
@@ -143,9 +146,19 @@ def _required(node: ET.Element, attribute: str) -> str:
 
 def _decimal(value: str) -> Decimal:
     try:
-        return Decimal(value.strip())
+        number = Decimal(value.strip())
     except InvalidOperation as exc:
         raise CfdiParseError(f"{value!r} is not a number") from exc
+    if not number.is_finite() or number.adjusted() > MAX_AMOUNT_EXPONENT:
+        raise CfdiParseError(f"{value!r} is not a number")
+    return number
+
+
+def _integer(value: str) -> int:
+    try:
+        return int(value.strip())
+    except ValueError as exc:
+        raise CfdiParseError(f"{value!r} is not a whole number") from exc
 
 
 def _optional_decimal(node: ET.Element | None, attribute: str) -> Decimal | None:
@@ -156,10 +169,15 @@ def _optional_decimal(node: ET.Element | None, attribute: str) -> Decimal | None
 
 
 def _datetime(value: str) -> datetime:
+    """CFDI date-times are local: no time zone."""
+    message = f"{value!r} is not an ISO 8601 date-time"
     try:
-        return datetime.fromisoformat(value.strip())
+        parsed = datetime.fromisoformat(value.strip())
     except ValueError as exc:
-        raise CfdiParseError(f"{value!r} is not an ISO 8601 date-time") from exc
+        raise CfdiParseError(message) from exc
+    if parsed.tzinfo is not None or parsed.year not in YEARS:
+        raise CfdiParseError(message)
+    return parsed
 
 
 def _date(value: str) -> date:
@@ -287,7 +305,7 @@ def _payment_document(node: ET.Element, q: _Qualifier) -> PaymentDocument:
         currency=node.get("MonedaDR"),
         exchange_rate=_optional_decimal(node, "EquivalenciaDR")
         or _optional_decimal(node, "TipoCambioDR"),
-        installment=int(installment) if installment else None,
+        installment=_integer(installment) if installment else None,
         previous_balance=_optional_decimal(node, "ImpSaldoAnt"),
         amount_paid=_optional_decimal(node, "ImpPagado") or ZERO,
         remaining_balance=_optional_decimal(node, "ImpSaldoInsoluto"),

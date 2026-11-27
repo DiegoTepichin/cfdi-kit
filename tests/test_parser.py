@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -165,3 +166,41 @@ def test_reports_missing_required_attribute() -> None:
 
     with pytest.raises(CfdiParseError, match="missing attribute Moneda"):
         parse_bytes(data)
+
+
+def _with_attribute(name: str, value: str) -> bytes:
+    text = (FIXTURES / "income_pue_40.xml").read_text(encoding="utf-8")
+    changed, count = re.subn(rf' {name}="[^"]*"', f' {name}="{value}"', text, count=1)
+    assert count == 1
+    return changed.encode()
+
+
+@pytest.mark.parametrize("encoding", ["nope", "shift_jis"])
+def test_rejects_unusable_xml_encodings(encoding: str) -> None:
+    data = f'<?xml version="1.0" encoding="{encoding}"?><a/>'.encode()
+
+    with pytest.raises(CfdiParseError, match="invalid XML"):
+        parse_bytes(data)
+
+
+@pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity", "1e999999999"])
+def test_rejects_amounts_that_are_not_usable_numbers(value: str) -> None:
+    with pytest.raises(CfdiParseError, match="is not a number"):
+        parse_bytes(_with_attribute("Total", value))
+
+
+@pytest.mark.parametrize(
+    "value", ["2026-01-15T10:30:00Z", "2026-01-15T10:30:00-06:00", "0001-01-01T00:00:00"]
+)
+def test_rejects_dates_outside_the_cfdi_format(value: str) -> None:
+    with pytest.raises(CfdiParseError, match="is not an ISO 8601 date-time"):
+        parse_bytes(_with_attribute("Fecha", value))
+
+
+def test_rejects_a_non_numeric_installment() -> None:
+    text = (FIXTURES / "payment_20.xml").read_text(encoding="utf-8")
+    changed, count = re.subn(r'NumParcialidad="[^"]*"', 'NumParcialidad="one"', text)
+    assert count >= 1
+
+    with pytest.raises(CfdiParseError, match="is not a whole number"):
+        parse_bytes(changed.encode())
