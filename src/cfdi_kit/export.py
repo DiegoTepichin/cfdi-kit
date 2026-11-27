@@ -16,9 +16,13 @@ if TYPE_CHECKING:
     from decimal import Decimal
     from pathlib import Path
 
+    from openpyxl.worksheet.worksheet import Worksheet
+
     from cfdi_kit.models import Cfdi, Concept, Payment, PaymentDocument
 
 Row = dict[str, str | float | int | datetime | None]
+
+FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n", "\uff1d", "\uff0b", "\uff0d", "\uff20")
 
 
 class Direction(StrEnum):
@@ -60,7 +64,8 @@ def payments_frame(cfdis: Iterable[Cfdi]) -> pd.DataFrame:
 
 
 def to_csv(cfdis: Sequence[Cfdi], path: str | Path, rfc: str | None = None) -> None:
-    invoices_frame(cfdis, rfc).to_csv(path, index=False)
+    """Write one row per invoice; text a spreadsheet would run is prefixed with an apostrophe."""
+    invoices_frame(cfdis, rfc).map(_escape_formula).to_csv(path, index=False)
 
 
 def to_excel(cfdis: Sequence[Cfdi], path: str | Path, rfc: str | None = None) -> None:
@@ -74,6 +79,7 @@ def to_excel(cfdis: Sequence[Cfdi], path: str | Path, rfc: str | None = None) ->
         for name, frame in sheets.items():
             frame.to_excel(writer, sheet_name=name, index=False)
             sheet = writer.sheets[name]
+            _store_as_text(sheet)
             sheet.freeze_panes = "A2"
             sheet.auto_filter.ref = sheet.dimensions
             for column, header in zip(sheet.columns, frame.columns, strict=True):
@@ -149,6 +155,20 @@ PAYMENT_COLUMNS = (
     "remaining_balance",
     "iva_paid",
 )
+
+
+def _escape_formula(value: object) -> object:
+    if isinstance(value, str) and value.startswith(FORMULA_PREFIXES):
+        return f"'{value}"
+    return value
+
+
+def _store_as_text(sheet: Worksheet) -> None:
+    """Invoice text comes from third parties: never let openpyxl type it as formula or error."""
+    for row in sheet.iter_rows():
+        for cell in row:
+            if cell.data_type in {"f", "e"}:
+                cell.data_type = "s"
 
 
 def _frame(rows: list[Row], columns: tuple[str, ...]) -> pd.DataFrame:
