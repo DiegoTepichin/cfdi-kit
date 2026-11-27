@@ -1,3 +1,5 @@
+from dataclasses import replace
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -99,3 +101,62 @@ def test_to_excel_writes_three_formatted_sheets(tmp_path: Path, all_valid: list[
     assert sheet.max_row == len(all_valid) + 1
     assert sheet.freeze_panes == "A2"
     assert sheet["A1"].value == "uuid"
+
+
+HOSTILE_TEXT = [
+    '=HYPERLINK("http://example.com","open")',
+    "+1+1",
+    "-2+3",
+    "@SUM(A1)",
+    "\t=1+1",
+    "\r=1+1",
+    "\n=1+1",
+    "\uff1d1+1",
+]
+
+
+def _with_description(text: str) -> Cfdi:
+    cfdi = load("income_pue_40.xml")
+    concept = replace(cfdi.concepts[0], description=text)
+    return replace(cfdi, concepts=(concept,), series=text)
+
+
+@pytest.mark.parametrize("text", [*HOSTILE_TEXT, "#REF!"])
+def test_to_excel_stores_invoice_text_as_inert_strings(tmp_path: Path, text: str) -> None:
+    path = tmp_path / "out.xlsx"
+
+    to_excel([_with_description(text)], path)
+
+    workbook = load_workbook(path)
+    cells = [cell for sheet in workbook for row in sheet.iter_rows() for cell in row]
+    assert {cell.data_type for cell in cells if cell.value is not None} <= {"s", "n", "d"}
+
+
+def test_to_excel_keeps_the_original_text(tmp_path: Path) -> None:
+    path = tmp_path / "out.xlsx"
+
+    to_excel([_with_description("=1+1")], path)
+
+    sheet = load_workbook(path)["line_items"]
+    values = {header.value: cell.value for header, cell in zip(sheet[1], sheet[2], strict=True)}
+    assert values["description"] == "=1+1"
+
+
+@pytest.mark.parametrize("text", HOSTILE_TEXT)
+def test_to_csv_escapes_text_a_spreadsheet_would_run(tmp_path: Path, text: str) -> None:
+    path = tmp_path / "out.csv"
+
+    to_csv([_with_description(text)], path)
+
+    assert pd.read_csv(path, dtype=str)["series"].iloc[0] == f"'{text}"
+
+
+def test_to_csv_leaves_negative_amounts_and_plain_text_alone(tmp_path: Path) -> None:
+    path = tmp_path / "out.csv"
+    cfdi = replace(_with_description("A-1"), subtotal=Decimal("-5.00"))
+
+    to_csv([cfdi], path)
+
+    row = pd.read_csv(path).iloc[0]
+    assert row["series"] == "A-1"
+    assert row["subtotal"] == pytest.approx(-5.0)

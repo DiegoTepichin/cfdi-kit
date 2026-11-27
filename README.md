@@ -74,7 +74,7 @@ CFDI 3.2 and earlier are reported as unsupported.
 
 ### `parse`: Excel or CSV
 
-`cfdi-kit parse PATHS -o out.xlsx [--rfc RFC]` writes three sheets: `invoices` (one row per CFDI, with taxes, totals in MXN and SAT catalog labels), `line_items` and `payments` (each invoice settled by a payment complement). With `-o out.csv` it writes the invoices table only. `--rfc` adds a `direction` column (`issued` / `received`).
+`cfdi-kit parse PATHS -o out.xlsx [--rfc RFC]` writes three sheets: `invoices` (one row per CFDI, with taxes, totals in MXN and SAT catalog labels), `line_items` and `payments` (each invoice settled by a payment complement). With `-o out.csv` it writes the invoices table only. `--rfc` adds a `direction` column (`issued` / `received`). Invoice text comes from third parties, so Excel stores it as plain text, never as a formula; in CSV, text starting with `=`, `+`, `-`, `@`, a tab or a line break gets a leading apostrophe.
 
 ### `summary`: income, expenses and VAT per month
 

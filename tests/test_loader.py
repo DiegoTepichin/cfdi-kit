@@ -2,6 +2,9 @@ import shutil
 import zipfile
 from pathlib import Path
 
+import pytest
+
+from cfdi_kit import loader
 from cfdi_kit.loader import load
 from tests.conftest import FIXTURES
 
@@ -77,3 +80,62 @@ def test_ignores_non_xml_files_inside_folders(tmp_path: Path) -> None:
     (tmp_path / "notes.txt").write_text("hi")
 
     assert load([tmp_path]).errors == ()
+
+
+def _zip_with(path: Path, *names: str) -> Path:
+    with zipfile.ZipFile(path, "w") as zf:
+        for name in names:
+            zf.write(FIXTURES / "income_pue_40.xml", name)
+    return path
+
+
+def test_reports_encrypted_zip_members_and_keeps_going(tmp_path: Path) -> None:
+    archive = _zip_with(tmp_path / "locked.zip", "a.xml")
+    data = bytearray(archive.read_bytes())
+    for signature, flag_offset in ((b"PK\x03\x04", 6), (b"PK\x01\x02", 8)):
+        data[data.index(signature) + flag_offset] |= 0x1
+    archive.write_bytes(bytes(data))
+
+    result = load([archive, FIXTURES / "expense_pue_40.xml"])
+
+    assert len(result.cfdis) == 1
+    assert [e.source for e in result.errors] == [f"{archive}!a.xml"]
+    assert result.errors[0].message.startswith("cannot read ZIP member")
+
+
+def test_reports_corrupt_zip_members(tmp_path: Path) -> None:
+    archive = _zip_with(tmp_path / "damaged.zip", "a.xml")
+    data = bytearray(archive.read_bytes())
+    start = data.index(b"Comprobante")
+    data[start] ^= 0xFF
+    archive.write_bytes(bytes(data))
+
+    result = load([archive])
+
+    assert result.errors[0].message.startswith("cannot read ZIP member")
+
+
+def test_reports_unreadable_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def refuse(_: Path) -> bytes:
+        raise PermissionError(13, "Permission denied")
+
+    (tmp_path / "a.xml").write_text("<a/>")
+    monkeypatch.setattr(Path, "read_bytes", refuse)
+
+    result = load([tmp_path])
+
+    assert result.errors[0].message == "cannot read file (Permission denied)"
+
+
+@pytest.mark.parametrize("zipped", [False, True])
+def test_size_limit_applies_to_loose_and_zipped_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, zipped: bool
+) -> None:
+    monkeypatch.setattr(loader, "MAX_XML_BYTES", 10)
+    loose = FIXTURES / "income_pue_40.xml"
+    source = _zip_with(tmp_path / "big.zip", "a.xml") if zipped else loose
+
+    result = load([source])
+
+    assert result.cfdis == ()
+    assert result.errors[0].message == "larger than 20 MiB, skipped"

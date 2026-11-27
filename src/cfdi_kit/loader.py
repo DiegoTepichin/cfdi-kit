@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import lzma
 import zipfile
+import zlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -15,6 +17,16 @@ if TYPE_CHECKING:
     from cfdi_kit.models import Cfdi
 
 MAX_XML_BYTES = 20 * 1024 * 1024
+TOO_LARGE = "larger than 20 MiB, skipped"
+ZIP_MEMBER_ERRORS = (
+    EOFError,
+    NotImplementedError,
+    OSError,
+    RuntimeError,
+    lzma.LZMAError,
+    zipfile.BadZipFile,
+    zlib.error,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,18 +81,33 @@ def _file_documents(
 ) -> Iterator[tuple[str, bytes]]:
     suffix = path.suffix.lower()
     if suffix == ".xml":
-        yield str(path), path.read_bytes()
+        yield from _xml_document(path, errors)
     elif suffix == ".zip":
         yield from _zip_documents(path, errors)
     elif explicit:
         errors.append(LoadError(str(path), "not an .xml or .zip file"))
 
 
+def _xml_document(path: Path, errors: list[LoadError]) -> Iterator[tuple[str, bytes]]:
+    try:
+        if path.stat().st_size > MAX_XML_BYTES:
+            errors.append(LoadError(str(path), TOO_LARGE))
+            return
+        data = path.read_bytes()
+    except OSError as exc:
+        errors.append(LoadError(str(path), f"cannot read file ({exc.strerror})"))
+        return
+    yield str(path), data
+
+
 def _zip_documents(path: Path, errors: list[LoadError]) -> Iterator[tuple[str, bytes]]:
     try:
         archive = zipfile.ZipFile(path)
-    except zipfile.BadZipFile:
+    except (NotImplementedError, UnicodeDecodeError, zipfile.BadZipFile):
         errors.append(LoadError(str(path), "not a valid ZIP archive"))
+        return
+    except OSError as exc:
+        errors.append(LoadError(str(path), f"cannot read file ({exc.strerror})"))
         return
     with archive:
         for member in sorted(archive.infolist(), key=lambda m: m.filename):
@@ -88,6 +115,11 @@ def _zip_documents(path: Path, errors: list[LoadError]) -> Iterator[tuple[str, b
                 continue
             source = f"{path}!{member.filename}"
             if member.file_size > MAX_XML_BYTES:
-                errors.append(LoadError(source, "larger than 20 MiB, skipped"))
+                errors.append(LoadError(source, TOO_LARGE))
                 continue
-            yield source, archive.read(member)
+            try:
+                data = archive.read(member)
+            except ZIP_MEMBER_ERRORS as exc:
+                errors.append(LoadError(source, f"cannot read ZIP member ({exc})"))
+                continue
+            yield source, data
