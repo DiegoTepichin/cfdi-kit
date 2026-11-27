@@ -1,6 +1,6 @@
 [project]
 name = "cfdi-kit"
-version = "1.0.0"
+version = "1.1.0"
 description = "Parse SAT CFDI invoices (XML) into dataframes, Excel and a local income / expense / VAT report. Nothing leaves your machine."
 readme = "README.md"
 license = "MIT"
